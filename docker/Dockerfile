@@ -1,0 +1,67 @@
+FROM osrf/ros:humble-desktop
+LABEL maintainer "zaki.x86@gmail.com"
+
+# Add ubuntu user with same UID and GID as your host system, if it doesn't already exist
+# Since Ubuntu 24.04, a non-root user is created by default with the name vscode and UID=1000
+ARG USERNAME=ubuntu
+ARG USER_UID=1000
+ARG USER_GID=$USER_UID
+RUN if ! id -u $USER_UID >/dev/null 2>&1; then \
+        groupadd --gid $USER_GID $USERNAME && \
+        useradd -s /bin/bash --uid $USER_UID --gid $USER_GID -m $USERNAME; \
+    fi
+# Add sudo support for the non-root user
+RUN apt-get update && \
+    apt-get install -y sudo && \
+    echo "$USERNAME ALL=(root) NOPASSWD:ALL" > /etc/sudoers.d/$USERNAME && \
+    chmod 0440 /etc/sudoers.d/$USERNAME
+
+# Switch from root to user
+USER $USERNAME
+
+# Add user to video group to allow access to webcam
+RUN sudo usermod --append --groups video $USERNAME
+
+# Update all packages
+RUN sudo apt update && sudo apt upgrade -y --fix-broken
+
+# Install Dependencies
+RUN sudo apt install -y git vim python3-pip
+RUN yes | pip3 install setuptools==58.2.0
+
+# Gazebo ROS and Movit2 dependencies
+RUN sudo apt install -y ros-humble-gazebo-ros-pkgs ros-humble-moveit ros-${ROS_DISTRO}-ur-robot-driver ros-${ROS_DISTRO}-ur-calibration
+
+# OpenGL and graphics dependencies
+RUN sudo apt-get update && sudo apt-get install -q -y --no-install-recommends \
+    libgl1-mesa-glx \
+    libgl1-mesa-dri \
+    libglew-dev \
+    libosmesa6-dev \
+    mesa-utils \
+    dirmngr \
+    gnupg2 \
+    lsb-release \
+    python3-colcon-ros \
+    && sudo apt-get clean
+
+# Rosdep update
+RUN rosdep fix-permissions && rosdep update
+
+# Source the ROS setup file
+RUN echo "source /opt/ros/${ROS_DISTRO}/setup.bash" >> ~/.bashrc
+
+################################
+## ADD ANY CUSTOM SETUP BELOW ##
+################################
+WORKDIR /home/$USERNAME/ws
+
+COPY . .
+
+RUN rosdep install --from-paths src --ignore-src -r -y || true
+
+# RUN cd /home/$USERNAME/ws \
+#   && . /opt/ros/humble/setup.sh \
+#   && sudo colcon build --merge-install
+
+#ENTRYPOINT [ "bash", "docker/entrypoint.sh" ]
