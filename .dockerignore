@@ -1,0 +1,10 @@
+build/
+install/
+**/*.o
+**/*.so
+**/*.a
+**/*.pyc
+**/__pycache__
+.git
+.env
+*.log
