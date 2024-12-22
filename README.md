@@ -40,3 +40,8 @@ Then,
 . install/setup.sh
 ```
 
+- Start the demo launch to plan motion:
+
+```
+ros2 launch ur5e_moveit_config demo.launch.py
+```
