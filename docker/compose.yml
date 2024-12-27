@@ -1,17 +1,14 @@
-version: "3.8"
-
 name: ur5e_workstation
 
 services:
-  ur5e_workstation:
+  ur5e_workstation_gpu:
     image: ur5e_ws:latest
-    container_name: ur5e_workstation
+    container_name: ur5e_workstation_gpu
     build: 
       context: ..
       dockerfile: docker/Dockerfile
     environment:
       - DISPLAY=:0
-      - WAYLAND_DISPLAY=wayland-0
       # Add these environment variables for Gazebo
       - NVIDIA_VISIBLE_DEVICES=all
       - NVIDIA_DRIVER_CAPABILITIES=all
@@ -21,10 +18,8 @@ services:
       - __GLX_VENDOR_LIBRARY_NAME=nvidia
     volumes:
       - ../:/home/ubuntu/ws
-      - "$HOME/.Xauthority:/root/.Xauthority:rw"
+      - ${XAUTHORITY:-$HOME/.Xauthority}:/root/.Xauthority
       - /tmp/.X11-unix:/tmp/.X11-unix
-      # Add this volume for NVIDIA support
-      - /usr/lib/wsl/lib:/usr/lib/wsl/lib
     runtime: nvidia  # Add this line for NVIDIA container runtime
     privileged: true  # This might be needed for hardware acceleration
     network_mode: host  # Often helps with ROS networking
@@ -38,6 +33,30 @@ services:
             - driver: nvidia
               count: all 
               capabilities: [gpu, utility, compute, graphics]  # Extended capabilities
+    healthcheck:
+      test: ["CMD", "pgrep", "ros"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+  
+  ur5e_workstation_cpu:
+    image: ur5e_ws:latest
+    container_name: ur5e_workstation_cpu
+    build: 
+      context: ..
+      dockerfile: docker/Dockerfile
+    environment:
+      - DISPLAY=:0
+      - QT_X11_NO_MITSHM=1
+    volumes:
+      - ../:/home/ubuntu/ws
+      - ${XAUTHORITY:-$HOME/.Xauthority}:/root/.Xauthority
+      - /tmp/.X11-unix:/tmp/.X11-unix
+    privileged: true  # This might be needed for hardware acceleration
+    network_mode: host  # Often helps with ROS networking
+    stdin_open: true
+    tty: true
+    restart: always
     healthcheck:
       test: ["CMD", "pgrep", "ros"]
       interval: 30s
