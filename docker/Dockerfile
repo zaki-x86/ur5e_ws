@@ -1,4 +1,5 @@
-FROM osrf/ros:humble-desktop
+ARG DOCKER_IMAGE=humble-release
+FROM  moveit/moveit2:${DOCKER_IMAGE}
 LABEL maintainer "zaki.x86@gmail.com"
 
 # Add ubuntu user with same UID and GID as your host system, if it doesn't already exist
@@ -26,24 +27,8 @@ RUN sudo usermod --append --groups video $USERNAME
 RUN sudo apt update && sudo apt upgrade -y --fix-broken
 
 # Install Dependencies
-RUN sudo apt install -y git vim python3-pip
+RUN sudo apt install -y git python3-pip
 RUN yes | pip3 install setuptools==58.2.0
-
-# Gazebo ROS and Movit2 dependencies
-RUN sudo apt install -y ros-humble-gazebo-ros-pkgs ros-humble-moveit ros-${ROS_DISTRO}-ur-robot-driver ros-${ROS_DISTRO}-ur-calibration
-
-# OpenGL and graphics dependencies
-RUN sudo apt-get update && sudo apt-get install -q -y --no-install-recommends \
-    libgl1-mesa-glx \
-    libgl1-mesa-dri \
-    libglew-dev \
-    libosmesa6-dev \
-    mesa-utils \
-    dirmngr \
-    gnupg2 \
-    lsb-release \
-    python3-colcon-ros \
-    && sudo apt-get clean
 
 # Rosdep update
 RUN rosdep fix-permissions && rosdep update
