@@ -46,6 +46,13 @@ int main(int argc, char * argv[])
   if(success) {
     RCLCPP_INFO(logger, "Executing plan...");
     auto result = move_group_interface.execute(plan);
+    if(result == moveit_msgs::msg::MoveItErrorCodes::SUCCESS) {
+      RCLCPP_INFO(logger, "Plan executed successfully!");
+    } else {
+      // Convert `moveit::core::MoveItErrorCode` to string
+      // Need to include `moveit/moveit_cpp/moveit_cpp.h`
+      RCLCPP_ERROR(logger, "Plan execution failed");
+    }
   } else {
     RCLCPP_ERROR(logger, "Planning failed!");
   }
@@ -53,5 +60,6 @@ int main(int argc, char * argv[])
   // Shutdown ROS
   RCLCPP_INFO(logger, "Done. Shutting down...");
   rclcpp::shutdown();
+  
   return 0;
 }

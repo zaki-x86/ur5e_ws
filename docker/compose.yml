@@ -38,6 +38,7 @@ services:
       interval: 30s
       timeout: 10s
       retries: 3
+    profiles: ["gpu"] # Add profile for GPU
   
   ur5e_workstation_cpu:
     image: ur5e_ws:latest
@@ -62,3 +63,4 @@ services:
       interval: 30s
       timeout: 10s
       retries: 3
+    profiles: ["cpu"] # Add profile for CPU
